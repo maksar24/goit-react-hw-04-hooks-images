@@ -1,104 +1,77 @@
-import React, { Component } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./App.module.css";
 import { fetchPictures } from "./Components/API";
-import { Searchbar } from "./Components/Searchbar/Searchbar";
+import Searchbar from "./Components/Searchbar/Searchbar";
 import { ImageGallery } from "./Components/ImageGallery/ImageGallery";
 import { CustomLoader } from "./Components/Loader/Loader";
 import { Modal } from "./Components/Modal/Modal";
 
-class App extends Component {
-  state = {
-    pictures: [],
-    error: null,
-    loading: false,
-    currentPage: 1,
-    query: "",
-    openModal: false,
-    modalContent: null,
-  };
+export default function App() {
+  const [pictures, setPictures] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [query, setQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [error, setError] = useState(null);
+  const [modalContent, setModalContent] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
 
-  componentDidUpdate(prevProps, prevState) {
-    const { currentPage, query } = this.state;
+  useEffect(() => {
+    setLoading(true);
+    fetchPictures(query, currentPage)
+      .then((prevPictures) => {
+        setPictures((pictures) => [...pictures, ...prevPictures]);
+      })
+      .finally(() => {
+        scroll();
+        setLoading(false);
+      });
+  }, [query, currentPage]);
 
-    if (prevState.currentPage !== currentPage || prevState.query !== query) {
-      if (prevState.query !== query) {
-        this.cleanData();
-      }
+  const nextPage = () => setCurrentPage(currentPage + 1);
 
-      this.setState({ loading: true });
-      fetchPictures(query, currentPage)
-        .then((el) => {
-          this.setState((prevState) => ({
-            pictures: [...prevState.pictures, ...el.data.hits],
-          }));
-        })
-        .catch(() => {
-          this.setState({ error: "error" });
-        })
-        .finally(() => {
-          this.scroll();
-          this.setState({ loading: false });
-        });
+  const handleSubmit = (value) => {
+    if (value !== query) {
+      setPictures([]);
+      setQuery(value);
+      setCurrentPage(1);
+      setError(null);
     }
-  }
-
-  nextPage = () => {
-    this.setState({ currentPage: this.state.currentPage + 1 });
   };
 
-  handleSubmit = (value) => {
-    this.setState({ query: value });
+  const onClickPicture = (e) => {
+    setModalContent(e.target.dataset.source);
+    toggleModal();
   };
 
-  scroll = () => {
+  const toggleModal = () => setOpenModal(!openModal);
+
+  const scroll = () => {
     window.scrollTo({
       top: document.documentElement.scrollHeight,
       behavior: "smooth",
     });
   };
 
-  cleanData = () => {
-    this.setState({ pictures: [] });
-  };
-
-  toggleModal = () => {
-    this.setState(({ openModal }) => ({
-      openModal: !openModal,
-    }));
-  };
-
-  onClickPicture = (e) => {
-    this.setState({ modalContent: e.target.dataset.source });
-    this.toggleModal();
-  };
-
-  render() {
-    const { loading, error, pictures, query, openModal, modalContent } =
-      this.state;
-
-    return (
-      <div className={styles.App}>
-        <Searchbar onSubmit={this.handleSubmit} />
-        {loading && <CustomLoader />}
-        {error ? (
-          <h2 className={styles.Title}>error (ಠ_ಠ) error</h2>
-        ) : query === "" ? (
-          <h2 className={styles.Title}>Try to look for something 🔍</h2>
-        ) : (
-          <ImageGallery
-            collection={pictures}
-            actionButton={this.nextPage}
-            actionBackground={this.onClickPicture}
-          />
-        )}
-        <Modal
-          onClickModal={this.toggleModal}
-          largeImageURL={modalContent}
-          openModal={openModal}
+  return (
+    <div className={styles.App}>
+      <Searchbar onSubmit={handleSubmit} />
+      {loading && <CustomLoader />}
+      {error ? (
+        <h2 className={styles.Title}>error (ಠ_ಠ) error</h2>
+      ) : query === "" ? (
+        <h2 className={styles.Title}>Try to look for something 🔍</h2>
+      ) : (
+        <ImageGallery
+          collection={pictures}
+          actionButton={nextPage}
+          actionBackground={onClickPicture}
         />
-      </div>
-    );
-  }
+      )}
+      <Modal
+        onClickModal={toggleModal}
+        largeImageURL={modalContent}
+        openModal={openModal}
+      />
+    </div>
+  );
 }
-
-export default App;
