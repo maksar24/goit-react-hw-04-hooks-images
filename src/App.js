@@ -4,7 +4,7 @@ import { fetchPictures } from "./Components/API";
 import Searchbar from "./Components/Searchbar/Searchbar";
 import { ImageGallery } from "./Components/ImageGallery/ImageGallery";
 import { CustomLoader } from "./Components/Loader/Loader";
-import { Modal } from "./Components/Modal/Modal";
+import Modal from "./Components/Modal/Modal";
 
 export default function App() {
   const [pictures, setPictures] = useState([]);
@@ -67,11 +67,9 @@ export default function App() {
           actionBackground={onClickPicture}
         />
       )}
-      <Modal
-        onClickModal={toggleModal}
-        largeImageURL={modalContent}
-        openModal={openModal}
-      />
+      {openModal && (
+        <Modal onClickModal={toggleModal} largeImageURL={modalContent} />
+      )}
     </div>
   );
 }
