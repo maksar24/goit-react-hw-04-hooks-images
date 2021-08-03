@@ -1,17 +1,15 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import styles from "./Modal.module.css";
 import PropTypes from "prop-types";
 
 export default function Modal({ onClickModal, largeImageURL }) {
-  const handleKeyESC = useRef(null);
-
   useEffect(() => {
-    window.addEventListener("keydown", handleKeyESC.current);
+    window.addEventListener("keydown", handleKeyESC);
 
     return () => {
-      window.removeEventListener("keydown", handleKeyESC.current);
+      window.removeEventListener("keydown", handleKeyESC);
     };
-  }, []);
+  });
 
   const handleModal = (e) => {
     if (e.currentTarget === e.target) {
@@ -19,7 +17,7 @@ export default function Modal({ onClickModal, largeImageURL }) {
     }
   };
 
-  handleKeyESC.current = (e) => {
+  const handleKeyESC = (e) => {
     if (e.code === "Escape") {
       onClickModal();
     }
